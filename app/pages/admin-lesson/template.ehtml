@@ -1,0 +1,139 @@
+import "./style.css";
+import { File, raw } from "@elements/app";
+import { marked } from "marked";
+import { Layout } from "#app/shared/templates/layout";
+import { formatClock } from "#app/shared/format";
+import { EditorLessonDetail, LessonForm, saveLesson, setDuration, uploadVideo } from "./services";
+
+interface EditorState {
+  lesson: EditorLessonDetail;
+  saving: boolean;
+  saved: boolean;
+  error: string;
+}
+
+interface VideoUpload {
+  file: File | undefined;
+  busy: boolean;
+  error: string;
+}
+
+function preview(text: string): string {
+  return marked.parse(text, { async: false });
+}
+
+function onSave(state: EditorState, form: LessonForm) {
+  state.saving = true;
+  state.saved = false;
+  state.error = "";
+
+  try {
+    state.lesson = saveLesson(form);
+    state.saved = true;
+  } catch (err: any) {
+    state.error = err.message;
+  }
+
+  state.saving = false;
+}
+
+function onVideoSubmit(state: EditorState, video: VideoUpload) {
+  if (!video.file) {
+    return;
+  }
+
+  video.busy = true;
+  video.error = "";
+
+  try {
+    state.lesson = uploadVideo({ lessonId: state.lesson.id, file: video.file });
+    video.file = undefined;
+  } catch (err: any) {
+    video.error = err.message;
+  }
+
+  video.busy = false;
+}
+
+function onLoadedMetadata(state: EditorState, player: HTMLVideoElement) {
+  let seconds = Math.round(player.duration);
+
+  if (Number.isFinite(seconds) && seconds > 0 && seconds !== state.lesson.durationSeconds) {
+    setDuration(state.lesson.id, seconds);
+    state.lesson.durationSeconds = seconds;
+  }
+}
+
+<html lang="en" class="page-admin-lesson" (
+  initial: EditorLessonDetail,
+  private state: EditorState = { lesson: initial, saving: false, saved: false, error: "" },
+  private form: LessonForm = { id: initial.id, title: initial.title, notes: initial.notes },
+  private video: VideoUpload = { file: undefined, busy: false, error: "" },
+)>
+  <Layout title={`Edit ${state.lesson.title}`} active="admin">
+    <div class="page-shell">
+      <div class="studio-head row">
+        <div class="stack is-xs">
+          <a class="editor-back" href={`/admin/courses/${state.lesson.courseId}`}>← {state.lesson.courseTitle}</a>
+          <h1>{state.lesson.title}</h1>
+        </div>
+        <span class="pill">Lesson {state.lesson.position} of {state.lesson.lessonCount}</span>
+      </div>
+
+      <div class="editor-grid">
+        <form class="card" onsubmit={() => onSave(state, form)}>
+          <div class="card-head"><h2 class="text-lg">Lesson</h2></div>
+          <div class="card-body stack">
+            <p e:if={state.error} class="callout is-danger" role="alert">{state.error}</p>
+
+            <div class="field">
+              <label for="title">Title</label>
+              <input id="title" value={form.title} required>
+            </div>
+
+            <div class="field">
+              <label for="notes">Notes</label>
+              <div class="notes-panes">
+                <textarea id="notes" class="is-tall" value={form.notes} placeholder="## What you need&#10;&#10;- A size 12 round"></textarea>
+                <div class="editor-preview prose" aria-label="Preview">
+                  <div e:if={form.notes.trim()}>{raw(preview(form.notes))}</div>
+                  <p e:else class="hint">The preview shows here as you type.</p>
+                </div>
+              </div>
+              <p class="hint">Markdown. Students see these notes under the video.</p>
+            </div>
+          </div>
+          <div class="card-foot cluster">
+            <button type="submit" class={["is-primary", state.saving && "is-loading"]} disabled={state.saving}>Save lesson</button>
+            <span e:if={state.saved} class="editor-saved">Saved</span>
+          </div>
+        </form>
+
+        <aside class="card">
+          <div class="card-head"><h2 class="text-lg">Video</h2></div>
+          <div class="card-body stack">
+            <video e:if={state.lesson.videoUrl}
+                   class="editor-video"
+                   src={state.lesson.videoUrl}
+                   controls
+                   playsinline
+                   preload="metadata"
+                   onloadedmetadata={(e) => onLoadedMetadata(state, e.target as HTMLVideoElement)}></video>
+            <div e:else class="editor-video center"><span class="hint">No video yet</span></div>
+
+            <span e:if={state.lesson.videoUrl} class="hint">Running time {formatClock(state.lesson.durationSeconds)}</span>
+
+            <form class="stack is-sm" onsubmit={() => onVideoSubmit(state, video)}>
+              <p e:if={video.error} class="callout is-danger">{video.error}</p>
+              <input type="file" accept="video/mp4,video/webm" value={video.file} aria-label="Lesson video">
+              <button type="submit" class={[video.busy && "is-loading"]} disabled={!video.file || video.busy}>
+                {state.lesson.videoUrl ? "Replace video" : "Upload video"}
+              </button>
+              <p class="hint">MP4 or WebM, up to 60 MB.</p>
+            </form>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </Layout>
+</html>

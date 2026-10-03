@@ -1,0 +1,135 @@
+@import "#app/shared/styles/page.css";
+
+.course-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22rem;
+  gap: var(--space-10);
+  align-items: start;
+  padding-block: var(--space-10) var(--space-6);
+}
+
+.course-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  background: var(--bg-muted);
+}
+
+.course-hero h1 {
+  margin: 0;
+  font-size: clamp(var(--text-3xl), 4.4vw, var(--text-5xl));
+  line-height: 1.05;
+}
+
+.course-meta {
+  color: var(--ink-dim);
+  font-size: var(--text-sm);
+}
+
+.buy-card {
+  position: sticky;
+  top: 5rem;
+}
+
+.buy-price {
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+}
+
+.buy-list {
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.buy-list li {
+  gap: var(--space-2);
+}
+
+.buy-list svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  color: var(--accent);
+}
+
+.course-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22rem;
+  gap: var(--space-10);
+}
+
+.lesson-list {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--bg-panel);
+  overflow: hidden;
+}
+
+.lesson-row {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  color: inherit;
+  text-decoration: none;
+}
+
+.lesson-list > div + div {
+  border-top: 1px solid var(--rule-soft);
+}
+
+a.lesson-row:hover {
+  background: var(--bg-soft);
+}
+
+.lesson-num {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--rule);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.lesson-row.is-done .lesson-num {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.lesson-num svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.lesson-time {
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.lesson-lock {
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--ink-dim);
+}
+
+@media (max-width: 56rem) {
+  .course-hero,
+  .course-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .buy-card {
+    position: static;
+  }
+}

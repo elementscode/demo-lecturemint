@@ -1,0 +1,129 @@
+.editor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.editor-grid textarea.is-tall {
+  min-height: 14rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+.editor-back {
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+.editor-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background: var(--bg-muted);
+}
+
+.editor-saved {
+  font-size: var(--text-sm);
+  color: var(--success-ink);
+}
+
+.editor-toggle {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  font-weight: var(--weight-medium);
+}
+
+.editor-lessons {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-panel);
+}
+
+.editor-lesson {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+}
+
+.editor-lesson + .editor-lesson {
+  border-top: 1px solid var(--rule-soft);
+}
+
+.editor-lesson-num {
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.editor-lesson a {
+  color: var(--ink);
+  font-weight: var(--weight-medium);
+}
+
+.editor-lesson-meta {
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.editor-preview {
+  padding: var(--space-5);
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+  min-height: 14rem;
+}
+
+.editor-video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md);
+  background: oklch(0.2 0.01 80);
+}
+
+@media (max-width: 60rem) {
+  .editor-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .editor-lesson {
+    grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  }
+
+  .editor-lesson-meta {
+    display: none;
+  }
+}
+
+.editor-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.editor-section-head {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.editor-section-head h2 {
+  margin: 0;
+}
+
+.editor-preview.prose h1,
+.editor-preview.prose h2 {
+  font-size: var(--text-2xl);
+}
+
+.editor-preview.prose h3 {
+  font-size: var(--text-xl);
+}

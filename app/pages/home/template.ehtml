@@ -1,0 +1,82 @@
+import "./style.css";
+import { Layout } from "#app/shared/templates/layout";
+import { CourseDetail } from "#app/shared/services/catalog";
+import { formatPrice, formatRuntime, percent } from "#app/shared/format";
+
+<html lang="en" class="page-home" (courses: CourseDetail[])>
+  <Layout title="Watercolor courses" active="courses">
+    <div class="page-shell">
+      <section class="catalog-hero">
+        <div class="stack is-lg">
+          <p class="eyebrow">Online watercolor studio</p>
+          <h1 class="display">Learn to let the <em>water</em> do the painting.</h1>
+          <p class="lede">
+            Short, focused video lessons with notes you can keep beside your palette.
+            Paint along at your own pace and ask questions under any lesson.
+          </p>
+          <div class="instructor-note row">
+            <span class="mono">IC</span>
+            <span>Taught by Iris Calder, painter and teacher for twenty years.</span>
+          </div>
+        </div>
+
+        <div class="catalog-art" aria-hidden="true">
+          <img e:for={c of courses.slice(0, 3)} src={c.coverUrl} alt="">
+        </div>
+      </section>
+
+      <div class="stack is-2xl">
+        <section e:if={courses.some((c) => c.owned)} class="stack">
+          <div class="section-head row">
+            <h2>Continue learning</h2>
+          </div>
+
+          <div class="continue-grid">
+            <a e:for={c of courses.filter((c) => c.owned)} class="card continue-card" href={`/courses/${c.slug}`}>
+              <img src={c.coverUrl} alt="">
+              <div class="stack is-xs">
+                <strong>{c.title}</strong>
+                <div class="progress-line row">
+                  <progress max={100} value={percent(c.completedCount, c.lessonCount)}></progress>
+                  <span>{percent(c.completedCount, c.lessonCount)}%</span>
+                </div>
+                <span class="course-card-meta">{c.completedCount} of {c.lessonCount} lessons done</span>
+              </div>
+            </a>
+          </div>
+        </section>
+
+        <section class="stack">
+          <div class="section-head row">
+            <h2>Courses</h2>
+            <span class="course-card-meta">{courses.length} courses</span>
+          </div>
+
+          <div class="course-grid">
+            <a e:for={c of courses} class="card course-card" href={`/courses/${c.slug}`}>
+              <img class="course-card-cover" src={c.coverUrl} alt="" loading="lazy">
+              <div class="card-body stack is-sm">
+                <div class="cluster is-sm">
+                  <span class="pill">{c.level}</span>
+                </div>
+                <h3>{c.title}</h3>
+                <p class="line-clamp-2">{c.tagline}</p>
+                <span class="course-card-meta">{c.lessonCount} lessons · {formatRuntime(c.totalSeconds)}</span>
+              </div>
+              <div class="card-foot row">
+                <div e:if={c.owned} class="progress-line row">
+                  <progress max={100} value={percent(c.completedCount, c.lessonCount)}></progress>
+                  <span>{percent(c.completedCount, c.lessonCount)}%</span>
+                </div>
+                <span e:else class="course-price">{formatPrice(c.priceCents)}</span>
+                <span class="link-action">{c.owned ? "Continue" : "View course"}</span>
+              </div>
+            </a>
+          </div>
+
+          <p e:if={courses.length === 0} class="callout">New courses are being painted. Check back soon.</p>
+        </section>
+      </div>
+    </div>
+  </Layout>
+</html>

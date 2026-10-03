@@ -1,0 +1,25 @@
+@import "#app/shared/styles/page.css";
+@import "#app/shared/styles/studio.css";
+
+.inbox {
+  max-width: 50rem;
+}
+
+.inbox-item {
+  padding: var(--space-5) var(--space-6);
+}
+
+.inbox-context {
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+}
+
+.inbox-context a {
+  color: var(--ink-soft);
+}
+
+.inbox-empty {
+  padding: var(--space-10);
+  text-align: center;
+  color: var(--ink-dim);
+}

@@ -1,0 +1,145 @@
+import "./style.css";
+import { raw, redirect, session } from "@elements/app";
+import { Layout } from "#app/shared/templates/layout";
+import { CourseDetail, LessonItem } from "#app/shared/services/catalog";
+import { formatClock, formatPrice, formatRuntime, percent } from "#app/shared/format";
+import { buyCourse } from "./services";
+
+interface BuyState {
+  busy: boolean;
+  error: string;
+}
+
+async function onBuy(courseId: string, state: BuyState) {
+  state.busy = true;
+  state.error = "";
+
+  try {
+    redirect(await buyCourse(courseId));
+  } catch (err: any) {
+    state.error = err.message;
+    state.busy = false;
+  }
+}
+
+function nextLesson(lessons: LessonItem[]): LessonItem | undefined {
+  return lessons.find((l) => !l.completed) ?? lessons[0];
+}
+
+<html lang="en" class="page-course" (
+  course: CourseDetail,
+  descriptionHtml: string,
+  lessons: LessonItem[],
+  canWatch: boolean,
+  instructor: boolean,
+  testMode: boolean,
+  justPurchased: boolean,
+  private buy: BuyState = { busy: false, error: "" },
+)>
+  <Layout title={course.title} active="courses">
+    <div class="page-shell">
+      <section class="course-hero">
+        <div class="stack is-lg">
+          <img class="course-cover" src={course.coverUrl} alt={`Cover painting for ${course.title}`}>
+          <div class="stack is-sm">
+            <div class="cluster is-sm">
+              <span class="pill">{course.level}</span>
+              <span e:if={!course.published} class="pill is-warning">Draft</span>
+            </div>
+            <h1>{course.title}</h1>
+            <p class="lede">{course.tagline}</p>
+            <p class="course-meta">{lessons.length} lessons · {formatRuntime(course.totalSeconds)} of video · taught by Iris Calder</p>
+          </div>
+        </div>
+
+        <aside class="card buy-card">
+          <div class="card-body stack">
+            <p e:if={justPurchased && course.owned} class="callout is-success">Payment received. The course is yours.</p>
+
+            <div e:if={course.owned || instructor} class="stack">
+              <p class="eyebrow">{instructor && !course.owned ? "Instructor preview" : "Your progress"}</p>
+              <div e:if={course.owned} class="stack is-xs">
+                <progress max={100} value={percent(course.completedCount, lessons.length)}></progress>
+                <span class="course-meta">{course.completedCount} of {lessons.length} lessons complete</span>
+              </div>
+              <a e:if={nextLesson(lessons)}
+                 class="button is-primary is-lg is-block"
+                 href={`/courses/${course.slug}/lessons/${nextLesson(lessons)!.id}`}>
+                {course.completedCount === 0 ? "Start the first lesson" : course.completedCount === lessons.length ? "Watch again" : "Continue learning"}
+              </a>
+              <a e:if={instructor} class="button is-ghost is-block" href={`/admin/courses/${course.id}`}>Edit course</a>
+            </div>
+
+            <div e:else class="stack">
+              <span class="buy-price">{formatPrice(course.priceCents)}</span>
+              <ul class="buy-list stack is-xs">
+                <li class="row">
+                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  {lessons.length} video lessons with written notes
+                </li>
+                <li class="row">
+                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Ask the instructor under any lesson
+                </li>
+                <li class="row">
+                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Yours to keep, rewatch any time
+                </li>
+              </ul>
+
+              <p e:if={buy.error} class="callout is-danger" role="alert">{buy.error}</p>
+
+              <a e:if={!session.isLoggedIn()}
+                 class="button is-primary is-lg is-block"
+                 href={`/signin?next=${encodeURIComponent(`/courses/${course.slug}`)}`}>
+                Sign in to buy
+              </a>
+              <button e:else
+                      class={["is-primary is-lg is-block", buy.busy && "is-loading"]}
+                      disabled={buy.busy}
+                      onclick={() => onBuy(course.id, buy)}>
+                Buy course · {formatPrice(course.priceCents)}
+              </button>
+              <p class="hint">{testMode ? "Test mode: checkout runs inside the app, no card needed." : "Secure card payment by Stripe."}</p>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <div class="course-body">
+        <div class="stack is-xl">
+          <section class="stack">
+            <h2>About this course</h2>
+            <div class="prose">{raw(descriptionHtml)}</div>
+          </section>
+
+          <section class="stack">
+            <h2>Lessons</h2>
+            <div class="lesson-list">
+              <div e:for={lesson of lessons}>
+                <a e:if={canWatch}
+                   class={["lesson-row", lesson.completed && "is-done"]}
+                   href={`/courses/${course.slug}/lessons/${lesson.id}`}>
+                  <span class="lesson-num">
+                    <svg e:if={lesson.completed} viewBox="0 0 16 16" width="14" height="14" aria-label="Complete"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span e:else>{lesson.position}</span>
+                  </span>
+                  <span>{lesson.title}</span>
+                  <span class="lesson-time">{formatClock(lesson.durationSeconds)}</span>
+                </a>
+                <div e:else class="lesson-row">
+                  <span class="lesson-num">{lesson.position}</span>
+                  <span>{lesson.title}</span>
+                  <span class="row is-sm lesson-time">
+                    {formatClock(lesson.durationSeconds)}
+                    <svg class="lesson-lock" viewBox="0 0 16 16" width="14" height="14" aria-label="Locked"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </Layout>
+</html>

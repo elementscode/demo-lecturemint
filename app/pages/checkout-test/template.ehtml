@@ -1,0 +1,83 @@
+import "./style.css";
+import { redirect } from "@elements/app";
+import { Layout } from "#app/shared/templates/layout";
+import { formatPrice, formatRuntime } from "#app/shared/format";
+import { TestOrder, payTestPurchase } from "./services";
+
+interface PayState {
+  busy: boolean;
+  error: string;
+}
+
+function onPay(purchaseId: string, state: PayState) {
+  state.busy = true;
+  state.error = "";
+
+  try {
+    redirect(`/courses/${payTestPurchase(purchaseId)}?purchased=1`);
+  } catch (err: any) {
+    state.error = err.message;
+    state.busy = false;
+  }
+}
+
+<html lang="en" class="page-checkout-test" (
+  order: TestOrder,
+  coverUrl: string,
+  private pay: PayState = { busy: false, error: "" },
+)>
+  <Layout title="Checkout">
+    <div class="page-shell">
+      <div class="checkout-wrap stack is-lg">
+        <div class="stack is-xs">
+          <div class="cluster is-sm">
+            <p class="eyebrow">Checkout</p>
+            <span class="pill is-warning"><span class="pill-dot"></span>Test mode</span>
+          </div>
+          <h1>Complete your purchase</h1>
+        </div>
+
+        <section class="card checkout-card">
+          <div class="card-body stack is-lg">
+            <div class="checkout-item">
+              <img e:if={coverUrl} class="checkout-cover" src={coverUrl} alt={`Cover painting for ${order.title}`}>
+              <div class="stack is-xs checkout-item-text">
+                <strong class="checkout-title">{order.title}</strong>
+                <span class="checkout-meta">{order.lessonCount} lessons · {formatRuntime(order.totalSeconds)} of video</span>
+              </div>
+              <span class="checkout-price">{formatPrice(order.amountCents)}</span>
+            </div>
+
+            <dl class="checkout-totals stack is-xs">
+              <div class="row">
+                <dt>Subtotal</dt>
+                <dd>{formatPrice(order.amountCents)}</dd>
+              </div>
+              <div class="row is-total">
+                <dt>Total due today</dt>
+                <dd>{formatPrice(order.amountCents)}</dd>
+              </div>
+            </dl>
+
+            <p e:if={pay.error} class="callout is-danger" role="alert">{pay.error}</p>
+
+            <div class="stack is-sm">
+              <button class={["is-primary is-lg is-block", pay.busy && "is-loading"]}
+                      disabled={pay.busy}
+                      onclick={() => onPay(order.purchaseId, pay)}>
+                Pay {formatPrice(order.amountCents)}
+              </button>
+              <a class="button is-ghost is-block" href={`/courses/${order.slug}`}>Cancel</a>
+            </div>
+          </div>
+        </section>
+
+        <p class="checkout-note">
+          This is the built-in test checkout: no card is charged and none is asked for.
+          Add <code>STRIPE_SECRET_KEY</code> to <code>config/env/development.env</code> and
+          this button opens real Stripe Checkout instead.
+        </p>
+      </div>
+    </div>
+  </Layout>
+</html>

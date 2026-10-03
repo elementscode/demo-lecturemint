@@ -1,0 +1,68 @@
+@layer tokens {
+  :root {
+    --brand-50: oklch(0.975 0.014 172);
+    --brand-100: oklch(0.945 0.03 172);
+    --brand-200: oklch(0.89 0.055 172);
+    --brand-300: oklch(0.82 0.085 172);
+    --brand-400: oklch(0.72 0.11 172);
+    --brand-500: oklch(0.62 0.115 172);
+    --brand-600: oklch(0.52 0.1 174);
+    --brand-700: oklch(0.44 0.085 176);
+    --brand-800: oklch(0.35 0.066 178);
+    --brand-900: oklch(0.26 0.046 180);
+    --brand-950: oklch(0.18 0.03 182);
+    --accent: var(--brand-600);
+    --accent-deep: var(--brand-700);
+    --accent-soft: var(--brand-50);
+    --accent-ink: #ffffff;
+    --accent-edge: var(--brand-200);
+    --link-c: 0.1;
+    --link-h: 174;
+
+    /* Warm cold-press paper instead of a cool white. */
+    --bg: oklch(0.985 0.006 85);
+    --bg-canvas: oklch(0.97 0.01 85);
+    --bg-soft: oklch(0.955 0.012 85);
+    --bg-muted: oklch(0.93 0.014 85);
+    --bg-panel: oklch(0.995 0.004 85);
+    --bg-elevated: oklch(0.995 0.004 85);
+    --rule: oklch(0.89 0.014 80);
+    --rule-soft: oklch(0.93 0.01 80);
+
+    --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, var(--font-serif);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --accent: var(--brand-400);
+      --accent-deep: var(--brand-300);
+      --accent-soft: var(--brand-900);
+      --accent-ink: var(--brand-950);
+      --accent-edge: var(--brand-700);
+      --bg: oklch(0.19 0.008 80);
+      --bg-canvas: oklch(0.17 0.008 80);
+      --bg-soft: oklch(0.23 0.009 80);
+      --bg-muted: oklch(0.26 0.01 80);
+      --bg-panel: oklch(0.215 0.008 80);
+      --bg-elevated: oklch(0.24 0.009 80);
+      --rule: oklch(0.32 0.01 80);
+      --rule-soft: oklch(0.27 0.01 80);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --accent: var(--brand-400);
+    --accent-deep: var(--brand-300);
+    --accent-soft: var(--brand-900);
+    --accent-ink: var(--brand-950);
+    --accent-edge: var(--brand-700);
+    --bg: oklch(0.19 0.008 80);
+    --bg-canvas: oklch(0.17 0.008 80);
+    --bg-soft: oklch(0.23 0.009 80);
+    --bg-muted: oklch(0.26 0.01 80);
+    --bg-panel: oklch(0.215 0.008 80);
+    --bg-elevated: oklch(0.24 0.009 80);
+    --rule: oklch(0.32 0.01 80);
+    --rule-soft: oklch(0.27 0.01 80);
+  }
+}

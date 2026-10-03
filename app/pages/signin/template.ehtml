@@ -1,0 +1,103 @@
+import "./style.css";
+import { redirect } from "@elements/app";
+import { Layout } from "#app/shared/templates/layout";
+import { signin } from "#app/shared/services/auth";
+
+interface SigninForm {
+  email: string;
+  password: string;
+  error: string;
+}
+
+interface DemoLogin {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+}
+
+export const DEMO_LOGINS: DemoLogin[] = [
+  { id: "iris", name: "Iris Calder", email: "iris@lecturemint.test", password: "watercolor", role: "Instructor" },
+  { id: "maya", name: "Maya Okafor", email: "maya@lecturemint.test", password: "paintalong", role: "2 courses" },
+  { id: "theo", name: "Theo Lindqvist", email: "theo@lecturemint.test", password: "paintalong", role: "1 course" },
+  { id: "priya", name: "Priya Raman", email: "priya@lecturemint.test", password: "paintalong", role: "3 courses" },
+  { id: "sam", name: "Sam Whitaker", email: "sam@lecturemint.test", password: "paintalong", role: "1 course" },
+];
+
+function onSubmit(form: SigninForm, next: string) {
+  try {
+    signin(form.email, form.password);
+    form.error = "";
+    redirect(next);
+  } catch (err: any) {
+    form.error = err.message;
+  }
+}
+
+function useLogin(form: SigninForm, login: DemoLogin) {
+  form.email = login.email;
+  form.password = login.password;
+  form.error = "";
+}
+
+<html lang="en" class="page-signin" (
+  next: string,
+  private form: SigninForm = { email: "", password: "", error: "" },
+)>
+  <Layout title="Sign in">
+    <div class="page-shell">
+      <div class="auth-wrap">
+        <form class="auth-form stack is-lg" onsubmit={() => onSubmit(form, next)}>
+          <div class="stack is-xs">
+            <h1>Welcome back</h1>
+            <p class="lede">Sign in to pick up where your brush left off.</p>
+          </div>
+
+          <p e:if={form.error} class="callout is-danger error" role="alert">{form.error}</p>
+
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email"
+                   name="email"
+                   type="email"
+                   value={form.email}
+                   autocomplete="email"
+                   autocapitalize="none"
+                   spellcheck={false}
+                   placeholder="you@example.com"
+                   required>
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password"
+                   name="password"
+                   type="password"
+                   value={form.password}
+                   autocomplete="current-password"
+                   required>
+          </div>
+
+          <button type="submit" class="is-primary is-block">Sign in</button>
+
+          <p class="hint">New here? <a href={`/signup?next=${encodeURIComponent(next)}`}>Create an account</a></p>
+        </form>
+
+        <aside class="card demo-logins">
+          <div class="card-head">
+            <h2>Demo accounts</h2>
+          </div>
+          <div class="card-body stack is-sm">
+            <p class="hint">Click one to fill the form. Students use <code>paintalong</code>; the instructor uses <code>watercolor</code>.</p>
+            <button e:for={login of DEMO_LOGINS} type="button" class="demo-login is-ghost" onclick={() => useLogin(form, login)}>
+              <strong>{login.name}</strong>
+              <small>{login.email}</small>
+              <span class={["pill", login.role === "Instructor" && "is-accent"]}>{login.role}</span>
+            </button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </Layout>
+</html>

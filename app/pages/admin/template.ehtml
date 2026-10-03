@@ -1,0 +1,111 @@
+import "./style.css";
+import { redirect } from "@elements/app";
+import { Layout } from "#app/shared/templates/layout";
+import { StudioTabs } from "#app/shared/templates/studio-tabs";
+import { formatPrice, timeAgo } from "#app/shared/format";
+import { CourseStats, RecentSale, Totals, createCourse } from "./services";
+
+function onNewCourse() {
+  redirect(createCourse());
+}
+
+<html lang="en" class="page-admin" (
+  courses: CourseStats[],
+  totals: Totals,
+  sales: RecentSale[],
+)>
+  <Layout title="Studio" active="admin">
+    <div class="page-shell">
+      <div class="studio-head row">
+        <div class="stack is-xs">
+          <p class="eyebrow">Studio</p>
+          <h1>Good to see you, Iris</h1>
+        </div>
+        <button class="is-primary" onclick={() => onNewCourse()}>New course</button>
+      </div>
+
+      <StudioTabs active="overview" openQuestions={totals.openQuestions} />
+
+      <div class="stack is-xl">
+        <section class="stat-grid" aria-label="Totals">
+          <div class="card stat stack is-xs">
+            <span class="stat-label">Revenue</span>
+            <span class="stat-value">{formatPrice(totals.revenueCents)}</span>
+            <span class="stat-note">All paid purchases</span>
+          </div>
+          <div class="card stat stack is-xs">
+            <span class="stat-label">Students</span>
+            <span class="stat-value">{totals.students}</span>
+            <span class="stat-note">{totals.enrollments} course enrollments</span>
+          </div>
+          <div class="card stat stack is-xs">
+            <span class="stat-label">Average completion</span>
+            <span class="stat-value">{totals.avgCompletion}%</span>
+            <span class="stat-note">Lessons finished per enrollment</span>
+          </div>
+          <a class="card stat stack is-xs" href="/admin/questions">
+            <span class="stat-label">Open questions</span>
+            <span class="stat-value">{totals.openQuestions}</span>
+            <span class="stat-note">Waiting for your reply</span>
+          </a>
+        </section>
+
+        <div class="studio-split">
+          <section class="stack">
+            <h2>Courses</h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Course</th>
+                    <th class="num">Price</th>
+                    <th class="num">Lessons</th>
+                    <th class="num">Students</th>
+                    <th class="num">Revenue</th>
+                    <th>Avg completion</th>
+                    <th class="num">Finished</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr e:for={c of courses}>
+                    <td>
+                      <div class="cluster is-sm">
+                        <a class="course-link" href={`/admin/courses/${c.id}`}>{c.title}</a>
+                        <span e:if={!c.published} class="pill is-warning">Draft</span>
+                      </div>
+                    </td>
+                    <td class="num">{formatPrice(c.priceCents)}</td>
+                    <td class="num">{c.lessonCount}</td>
+                    <td class="num">{c.students}</td>
+                    <td class="num">{formatPrice(c.revenueCents)}</td>
+                    <td>
+                      <div class="completion row" title={`${c.avgCompletion}% of lessons finished on average`}>
+                        <progress max={100} value={c.avgCompletion}></progress>
+                        <span>{c.avgCompletion}%</span>
+                      </div>
+                    </td>
+                    <td class="num">{c.finished} of {c.students}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-head"><h2 class="text-lg">Recent sales</h2></div>
+            <div class="card-body stack">
+              <div e:for={s of sales} class="sale row">
+                <div class="sale-who">
+                  <strong>{s.studentName}</strong>
+                  <span class="truncate">{s.courseTitle} · {timeAgo(s.paidAt)}</span>
+                </div>
+                <strong>{formatPrice(s.amountCents)}</strong>
+              </div>
+              <p e:if={sales.length === 0} class="hint">No sales yet.</p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </Layout>
+</html>

@@ -1,0 +1,11 @@
+import "./style.css";
+
+/** The instructor's section navigation, under each Studio page heading. */
+<StudioTabs (active: string, openQuestions: number = 0)>
+  <nav class="studio-tabs row" aria-label="Studio">
+    <a href="/admin" class={[active === "overview" && "is-active"]}>Overview</a>
+    <a href="/admin/questions" class={[active === "questions" && "is-active"]}>
+      Questions<span e:if={openQuestions > 0} class="pill is-accent">{openQuestions}</span>
+    </a>
+  </nav>
+</StudioTabs>
