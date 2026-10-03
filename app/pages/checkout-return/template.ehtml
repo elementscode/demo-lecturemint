@@ -1,0 +1,17 @@
+import "./style.css";
+import { Layout } from "#app/shared/templates/layout";
+
+<html lang="en" class="page-checkout-return">
+  <Layout title="Payment processing">
+    <div class="page-shell is-form">
+      <div class="page-hero stack">
+        <p class="eyebrow">Checkout</p>
+        <h1>Your payment is processing</h1>
+        <p class="lede">Some payment methods take a few minutes to confirm. The course unlocks as soon as Stripe tells us it has cleared.</p>
+        <div class="cluster">
+          <a class="button is-primary" href="/">Back to courses</a>
+        </div>
+      </div>
+    </div>
+  </Layout>
+</html>

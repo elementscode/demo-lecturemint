@@ -1,0 +1,35 @@
+.studio-head {
+  justify-content: space-between;
+  align-items: end;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding-block: var(--space-10) var(--space-6);
+}
+
+.studio-head h1 {
+  margin: 0;
+}
+
+.studio-tabs a {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  padding-block: var(--space-2);
+  border-bottom: 2px solid transparent;
+}
+
+.studio-tabs a.is-active {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+
+.studio-tabs {
+  gap: var(--space-6);
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: var(--space-8);
+}
+
+.studio-tabs .pill {
+  margin-left: var(--space-1);
+}

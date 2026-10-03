@@ -1,0 +1,83 @@
+import "./style.css";
+import { LiveView } from "@elements/app";
+import { Layout } from "#app/shared/templates/layout";
+import { StudioTabs } from "#app/shared/templates/studio-tabs";
+import { QuestionThread } from "#app/shared/templates/question-thread";
+import { Question } from "#app/shared/services/questions";
+
+export interface LessonRef {
+  id: string;
+  position: number;
+  title: string;
+  courseTitle: string;
+  courseSlug: string;
+}
+
+function isAnswered(view: LiveView<Question>, questionId: string): boolean {
+  return view.some((r) => r.parentId === questionId && r.fromInstructor);
+}
+
+function threads(view: LiveView<Question>, filter: { value: string }): Question[] {
+  return view
+    .filter((q) => !q.parentId && (filter.value === "all" || !isAnswered(view, q.id)))
+    .sort((a, b) => +b.createdAt - +a.createdAt);
+}
+
+function openCount(view: LiveView<Question>): number {
+  return view.filter((q) => !q.parentId && !isAnswered(view, q.id)).length;
+}
+
+function repliesTo(view: LiveView<Question>, questionId: string): Question[] {
+  return view.filter((q) => q.parentId === questionId).sort((a, b) => +a.createdAt - +b.createdAt);
+}
+
+function lessonFor(lessons: LessonRef[], lessonId: string): LessonRef | undefined {
+  return lessons.find((l) => l.id === lessonId);
+}
+
+<html lang="en" class="page-admin-questions" (
+  questions: LiveView<Question>,
+  lessons: LessonRef[],
+  private filter: { value: string } = { value: "open" },
+)>
+  <Layout title="Questions" active="admin">
+    <div class="page-shell">
+      <div class="studio-head row">
+        <div class="stack is-xs">
+          <p class="eyebrow">Studio</p>
+          <h1>Student questions</h1>
+        </div>
+        <span class="pill is-success"><span class="pill-dot"></span>Live</span>
+      </div>
+
+      <StudioTabs active="questions" openQuestions={openCount(questions)} />
+
+      <div class="inbox stack is-lg">
+        <div class="tabs">
+          <div class="tab-list" role="tablist">
+            <button role="tab" class={["tab", filter.value === "open" && "is-active"]} onclick={() => filter.value = "open"}>
+              Waiting for reply ({openCount(questions)})
+            </button>
+            <button role="tab" class={["tab", filter.value === "all" && "is-active"]} onclick={() => filter.value = "all"}>
+              All questions
+            </button>
+          </div>
+        </div>
+
+        <div e:if={threads(questions, filter).length === 0} class="card inbox-empty">
+          {filter.value === "open" ? "All caught up. New questions appear here the moment they are asked." : "No questions yet."}
+        </div>
+
+        <article e:for={q of threads(questions, filter)} class="card inbox-item stack">
+          <div class="inbox-context" e:if={lessonFor(lessons, q.lessonId)}>
+            {lessonFor(lessons, q.lessonId)!.courseTitle} ·
+            <a href={`/courses/${lessonFor(lessons, q.lessonId)!.courseSlug}/lessons/${q.lessonId}#questions`}>
+              Lesson {lessonFor(lessons, q.lessonId)!.position}: {lessonFor(lessons, q.lessonId)!.title}
+            </a>
+          </div>
+          <QuestionThread question={q} replies={repliesTo(questions, q.id)} view={questions} instructor={true} />
+        </article>
+      </div>
+    </div>
+  </Layout>
+</html>

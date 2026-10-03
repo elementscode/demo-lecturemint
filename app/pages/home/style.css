@@ -1,0 +1,187 @@
+@import "#app/shared/styles/page.css";
+
+.catalog-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: var(--space-12);
+  align-items: center;
+  padding-block: var(--space-16) var(--space-12);
+}
+
+.catalog-hero .display {
+  font-size: clamp(var(--text-4xl), 5.4vw, var(--text-6xl));
+  line-height: 1.02;
+  text-wrap: balance;
+}
+
+.catalog-hero .display em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.catalog-art {
+  position: relative;
+  aspect-ratio: 5 / 4;
+}
+
+.catalog-art img {
+  position: absolute;
+  width: 72%;
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 6px solid var(--bg-panel);
+}
+
+.catalog-art img:nth-child(1) {
+  top: 0;
+  left: 0;
+  transform: rotate(-3deg);
+}
+
+.catalog-art img:nth-child(2) {
+  top: 22%;
+  right: 0;
+  transform: rotate(2.5deg);
+}
+
+.catalog-art img:nth-child(3) {
+  bottom: 0;
+  left: 10%;
+  transform: rotate(-1deg);
+}
+
+.instructor-note {
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.instructor-note .mono {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+}
+
+.section-head {
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.section-head h2 {
+  margin: 0;
+}
+
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: var(--space-6);
+}
+
+.course-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  transition: var(--transition-shadow), var(--transition-transform);
+}
+
+.course-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.course-card-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+  background: var(--bg-muted);
+}
+
+.course-card .card-body {
+  flex: 1;
+}
+
+.course-card h3 {
+  margin: 0;
+  font-size: var(--text-xl);
+}
+
+.course-card-meta {
+  font-size: var(--text-sm);
+  color: var(--ink-dim);
+}
+
+.course-card .card-foot {
+  justify-content: space-between;
+  border-top: 0;
+}
+
+.course-price {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+}
+
+.progress-line {
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.progress-line progress {
+  flex: 1;
+}
+
+.continue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: var(--space-4);
+}
+
+.continue-card {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-3);
+  color: inherit;
+  text-decoration: none;
+}
+
+.continue-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
+.continue-card strong {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+}
+
+@media (max-width: 52rem) {
+  .catalog-hero {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+    padding-block: var(--space-10) var(--space-6);
+  }
+}
+
+@media (max-width: 52rem) {
+  .catalog-art {
+    width: 100%;
+    max-width: 24rem;
+    margin-inline: auto;
+  }
+}

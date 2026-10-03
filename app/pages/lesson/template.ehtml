@@ -1,0 +1,210 @@
+import "./style.css";
+import { LiveView, raw, session } from "@elements/app";
+import { Layout } from "#app/shared/templates/layout";
+import { QuestionThread } from "#app/shared/templates/question-thread";
+import { CourseDetail, LessonFull, LessonItem } from "#app/shared/services/catalog";
+import { Question, MAX_QUESTION } from "#app/shared/services/questions";
+import { formatClock, percent } from "#app/shared/format";
+import { setComplete } from "./services";
+
+interface LessonState {
+  lessons: LessonItem[];
+  saving: boolean;
+  error: string;
+}
+
+interface AskDraft {
+  body: string;
+  error: string;
+}
+
+function isDone(state: LessonState, lessonId: string): boolean {
+  return state.lessons.find((l) => l.id === lessonId)?.completed ?? false;
+}
+
+function doneCount(state: LessonState): number {
+  return state.lessons.filter((l) => l.completed).length;
+}
+
+function neighbor(state: LessonState, lessonId: string, step: number): LessonItem | undefined {
+  let i = state.lessons.findIndex((l) => l.id === lessonId);
+
+  return i < 0 ? undefined : state.lessons[i + step];
+}
+
+function onToggleComplete(state: LessonState, lessonId: string, done: boolean) {
+  state.saving = true;
+  state.error = "";
+
+  try {
+    state.lessons = setComplete(lessonId, done);
+  } catch (err: any) {
+    state.error = err.message;
+  }
+
+  state.saving = false;
+}
+
+function onEnded(state: LessonState, lessonId: string) {
+  if (!isDone(state, lessonId)) {
+    onToggleComplete(state, lessonId, true);
+  }
+}
+
+function onAskSubmit(view: LiveView<Question>, draft: AskDraft, instructor: boolean) {
+  let body = draft.body.trim();
+
+  if (!body) {
+    return;
+  }
+
+  try {
+    view.insert(
+      {
+        parentId: null,
+        userId: session.getOrThrow("userId"),
+        userName: session.getOrThrow("userName"),
+        fromInstructor: instructor,
+        body,
+        createdAt: new Date(),
+      },
+      () => {
+        draft.body = "";
+        draft.error = "";
+      },
+    );
+  } catch (err: any) {
+    draft.error = err.message;
+  }
+}
+
+function threads(view: LiveView<Question>): Question[] {
+  return view.filter((q) => !q.parentId).sort((a, b) => +b.createdAt - +a.createdAt);
+}
+
+function repliesTo(view: LiveView<Question>, questionId: string): Question[] {
+  return view.filter((q) => q.parentId === questionId).sort((a, b) => +a.createdAt - +b.createdAt);
+}
+
+<html lang="en" class="page-lesson" (
+  course: CourseDetail,
+  lesson: LessonFull,
+  initialLessons: LessonItem[],
+  questions: LiveView<Question>,
+  instructor: boolean,
+  private state: LessonState = { lessons: initialLessons, saving: false, error: "" },
+  private draft: AskDraft = { body: "", error: "" },
+)>
+  <Layout title={`${lesson.title} · ${course.title}`} active="courses">
+    <div class="page-shell">
+      <div class="lesson-layout">
+        <div class="stack is-xl">
+          <div class="stack">
+            <nav class="lesson-crumbs cluster" aria-label="Breadcrumb">
+              <a href="/">Courses</a>
+              <span aria-hidden="true">/</span>
+              <a href={`/courses/${course.slug}`}>{course.title}</a>
+              <span aria-hidden="true">/</span>
+              <span>Lesson {lesson.position}</span>
+            </nav>
+
+            <video e:if={lesson.videoUrl}
+                   class="lesson-video"
+                   src={lesson.videoUrl}
+                   poster={course.coverUrl}
+                   controls
+                   playsinline
+                   preload="metadata"
+                   onended={() => onEnded(state, lesson.id)}></video>
+            <div e:else class="lesson-video-missing">Video coming soon</div>
+
+            <div class="lesson-titlebar row">
+              <div class="stack is-xs">
+                <p class="eyebrow">Lesson {lesson.position} of {state.lessons.length} · {formatClock(lesson.durationSeconds)}</p>
+                <h1>{lesson.title}</h1>
+              </div>
+
+              <button class={["lesson-done-button", isDone(state, lesson.id) && "is-done", state.saving && "is-loading"]}
+                      disabled={state.saving}
+                      onclick={() => onToggleComplete(state, lesson.id, !isDone(state, lesson.id))}>
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                {isDone(state, lesson.id) ? "Completed" : "Mark complete"}
+              </button>
+            </div>
+
+            <p e:if={state.error} class="callout is-danger">{state.error}</p>
+          </div>
+
+          <section class="card lesson-notes" aria-label="Lesson notes">
+            <div e:if={lesson.notes} class="prose">{raw(lesson.notesHtml)}</div>
+            <p e:else class="hint">No notes for this lesson.</p>
+          </section>
+
+          <div class="lesson-pager row">
+            <a e:if={neighbor(state, lesson.id, -1)}
+               class="button is-ghost"
+               href={`/courses/${course.slug}/lessons/${neighbor(state, lesson.id, -1)!.id}`}>
+              ← {neighbor(state, lesson.id, -1)!.title}
+            </a>
+            <span e:else></span>
+            <a e:if={neighbor(state, lesson.id, 1)}
+               class="button is-primary"
+               href={`/courses/${course.slug}/lessons/${neighbor(state, lesson.id, 1)!.id}`}>
+              Next: {neighbor(state, lesson.id, 1)!.title} →
+            </a>
+          </div>
+
+          <section class="stack is-lg" id="questions">
+            <div class="qa-head row">
+              <h2>Questions</h2>
+              <span class="qa-live row">
+                <span class="pill is-success"><span class="pill-dot"></span>Live</span>
+                {threads(questions).length} {threads(questions).length === 1 ? "question" : "questions"}
+              </span>
+            </div>
+
+            <form class="qa-form stack is-sm" onsubmit={() => onAskSubmit(questions, draft, instructor)}>
+              <p e:if={draft.error} class="callout is-danger">{draft.error}</p>
+              <label for="ask" class="hint">Stuck on something? Ask under the lesson and Iris will reply here.</label>
+              <textarea id="ask" value={draft.body} maxlength={MAX_QUESTION} placeholder="Ask a question about this lesson" required></textarea>
+              <div class="cluster">
+                <button type="submit" class="is-primary">Post question</button>
+              </div>
+            </form>
+
+            <p e:if={threads(questions).length === 0} class="qa-empty">No questions yet. Be the first to ask.</p>
+
+            <div class="stack is-xl">
+              <QuestionThread e:for={q of threads(questions)}
+                              question={q}
+                              replies={repliesTo(questions, q.id)}
+                              view={questions}
+                              instructor={instructor} />
+            </div>
+          </section>
+        </div>
+
+        <aside class="card lesson-side">
+          <div class="card-head">
+            <h2><a href={`/courses/${course.slug}`}>{course.title}</a></h2>
+            <progress max={100} value={percent(doneCount(state), state.lessons.length)}></progress>
+            <span class="hint">{doneCount(state)} of {state.lessons.length} complete · {percent(doneCount(state), state.lessons.length)}%</span>
+          </div>
+          <nav class="side-lessons stack is-xs" aria-label="Lessons">
+            <a e:for={item of state.lessons}
+               class={["side-lesson", item.completed && "is-done", item.id === lesson.id && "is-current"]}
+               href={`/courses/${course.slug}/lessons/${item.id}`}
+               aria-current={item.id === lesson.id ? "page" : undefined}>
+              <span class="side-check">
+                <svg e:if={item.completed} viewBox="0 0 16 16" width="12" height="12" aria-label="Complete"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span e:else>{item.position}</span>
+              </span>
+              <span>{item.title}</span>
+              <span class="side-time">{formatClock(item.durationSeconds)}</span>
+            </a>
+          </nav>
+        </aside>
+      </div>
+    </div>
+  </Layout>
+</html>

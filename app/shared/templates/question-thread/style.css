@@ -1,0 +1,83 @@
+.thread {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.thread-avatar {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-muted);
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.thread-avatar.is-instructor {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.thread-head {
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.thread-head strong {
+  color: var(--ink);
+}
+
+.thread-time {
+  color: var(--ink-dim);
+}
+
+.thread-body {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.thread-replies {
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--accent-edge);
+}
+
+.thread-reply {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.thread-reply .thread-avatar {
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 0.65rem;
+}
+
+.thread-actions button {
+  --button-height-sm: 1.75rem;
+}
+
+.thread-reply-form textarea {
+  min-height: 4.5rem;
+}
+
+.thread-new {
+  animation: thread-in 320ms var(--ease-out);
+}
+
+@keyframes thread-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thread-new {
+    animation: none;
+  }
+}

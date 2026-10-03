@@ -1,0 +1,195 @@
+import "./style.css";
+import { File, redirect } from "@elements/app";
+import { Layout } from "#app/shared/templates/layout";
+import { CourseDetail } from "#app/shared/services/catalog";
+import { formatClock } from "#app/shared/format";
+import {
+  CourseForm,
+  EditorLesson,
+  LEVELS,
+  addLesson,
+  deleteLesson,
+  moveLesson,
+  saveCourse,
+  toForm,
+  uploadCover,
+} from "./services";
+
+interface EditorState {
+  course: CourseDetail;
+  lessons: EditorLesson[];
+  saving: boolean;
+  saved: boolean;
+  error: string;
+}
+
+interface CoverUpload {
+  file: File | undefined;
+  busy: boolean;
+  error: string;
+}
+
+function onSave(state: EditorState, form: CourseForm) {
+  state.saving = true;
+  state.saved = false;
+  state.error = "";
+
+  try {
+    state.course = saveCourse(form);
+    Object.assign(form, toForm(state.course));
+    state.saved = true;
+  } catch (err: any) {
+    state.error = err.message;
+  }
+
+  state.saving = false;
+}
+
+function onCoverSubmit(state: EditorState, cover: CoverUpload) {
+  if (!cover.file) {
+    return;
+  }
+
+  cover.busy = true;
+  cover.error = "";
+
+  try {
+    state.course.coverUrl = uploadCover({ courseId: state.course.id, file: cover.file });
+    cover.file = undefined;
+  } catch (err: any) {
+    cover.error = err.message;
+  }
+
+  cover.busy = false;
+}
+
+function onAddLesson(courseId: string) {
+  redirect(addLesson(courseId));
+}
+
+function onMove(state: EditorState, lessonId: string, step: number) {
+  state.lessons = moveLesson(state.course.id, lessonId, step);
+}
+
+function onDeleteLesson(state: EditorState, lesson: EditorLesson) {
+  if (confirm(`Delete "${lesson.title}"? Its questions and progress go with it.`)) {
+    state.lessons = deleteLesson(state.course.id, lesson.id);
+  }
+}
+
+<html lang="en" class="page-admin-course" (
+  initial: CourseDetail,
+  initialForm: CourseForm,
+  initialLessons: EditorLesson[],
+  private state: EditorState = { course: initial, lessons: initialLessons, saving: false, saved: false, error: "" },
+  private form: CourseForm = initialForm,
+  private cover: CoverUpload = { file: undefined, busy: false, error: "" },
+)>
+  <Layout title={`Edit ${state.course.title}`} active="admin">
+    <div class="page-shell">
+      <div class="studio-head row">
+        <div class="stack is-xs">
+          <a class="editor-back" href="/admin">← Studio</a>
+          <h1>{state.course.title}</h1>
+        </div>
+        <div class="cluster">
+          <span e:if={state.course.published} class="pill is-success">Published</span>
+          <span e:else class="pill is-warning">Draft</span>
+          <a class="button is-ghost" href={`/courses/${state.course.slug}`}>View page</a>
+        </div>
+      </div>
+
+      <div class="editor-grid">
+        <div class="stack is-xl">
+          <form class="card" onsubmit={() => onSave(state, form)}>
+            <div class="card-head"><h2 class="text-lg">Details</h2></div>
+            <div class="card-body stack">
+              <p e:if={state.error} class="callout is-danger" role="alert">{state.error}</p>
+
+              <div class="field">
+                <label for="title">Title</label>
+                <input id="title" value={form.title} required>
+              </div>
+
+              <div class="field">
+                <label for="tagline">Tagline</label>
+                <input id="tagline" value={form.tagline} placeholder="One sentence on the catalog card">
+              </div>
+
+              <div class="editor-pair">
+                <div class="field">
+                  <label for="slug">Url</label>
+                  <input id="slug" value={form.slug} autocapitalize="none" spellcheck={false}>
+                  <p class="hint">/courses/{form.slug || "…"}</p>
+                </div>
+
+                <div class="field">
+                  <label for="price">Price (USD)</label>
+                  <input id="price" type="text" inputmode="decimal" value={form.price} required>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="level">Level</label>
+                <select id="level" value={form.level}>
+                  <option e:for={level of LEVELS.map((name) => ({ id: name, name }))} value={level.name}>{level.name}</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="description">Description</label>
+                <textarea id="description" class="is-tall" value={form.description}></textarea>
+                <p class="hint">Markdown: **bold**, *italic*, lists and headings.</p>
+              </div>
+
+              <label class="editor-toggle">
+                <input type="checkbox" checked={form.published}>
+                Published in the catalog
+              </label>
+            </div>
+            <div class="card-foot cluster">
+              <button type="submit" class={["is-primary", state.saving && "is-loading"]} disabled={state.saving}>Save changes</button>
+              <span e:if={state.saved} class="editor-saved">Saved</span>
+            </div>
+          </form>
+
+          <section class="stack">
+            <div class="editor-section-head row">
+              <h2>Lessons</h2>
+              <button onclick={() => onAddLesson(state.course.id)}>Add lesson</button>
+            </div>
+
+            <div e:if={state.lessons.length > 0} class="editor-lessons">
+              <div e:for={lesson of state.lessons} class="editor-lesson">
+                <span class="editor-lesson-num">{lesson.position}</span>
+                <a href={`/admin/lessons/${lesson.id}`}>{lesson.title}</a>
+                <span class="editor-lesson-meta">{lesson.hasVideo ? formatClock(lesson.durationSeconds) : "No video"}</span>
+                <div class="button-group">
+                  <button class="is-sm is-icon" aria-label="Move up" disabled={lesson.position === 1} onclick={() => onMove(state, lesson.id, -1)}>↑</button>
+                  <button class="is-sm is-icon" aria-label="Move down" disabled={lesson.position === state.lessons.length} onclick={() => onMove(state, lesson.id, 1)}>↓</button>
+                  <button class="is-sm is-icon is-danger" aria-label="Delete lesson" onclick={() => onDeleteLesson(state, lesson)}>×</button>
+                </div>
+              </div>
+            </div>
+            <p e:else class="callout">No lessons yet. Add the first one to start filming.</p>
+          </section>
+        </div>
+
+        <aside class="card">
+          <div class="card-head"><h2 class="text-lg">Cover</h2></div>
+          <div class="card-body stack">
+            <img e:if={state.course.coverUrl} class="editor-cover" src={state.course.coverUrl} alt="Course cover">
+            <div e:else class="editor-cover"></div>
+
+            <form class="stack is-sm" onsubmit={() => onCoverSubmit(state, cover)}>
+              <p e:if={cover.error} class="callout is-danger">{cover.error}</p>
+              <input type="file" accept="image/jpeg,image/png,image/webp" value={cover.file} aria-label="Cover image">
+              <button type="submit" class={[cover.busy && "is-loading"]} disabled={!cover.file || cover.busy}>Upload cover</button>
+              <p class="hint">A landscape image, about 1600 × 1000.</p>
+            </form>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </Layout>
+</html>

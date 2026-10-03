@@ -1,0 +1,102 @@
+import "./style.css";
+import { LiveView, session } from "@elements/app";
+import { Question } from "#app/shared/services/questions";
+import { initials, timeAgo } from "#app/shared/format";
+
+interface ReplyDraft {
+  open: boolean;
+  body: string;
+  error: string;
+}
+
+function onReplySubmit(view: LiveView<Question>, question: Question, draft: ReplyDraft) {
+  let body = draft.body.trim();
+
+  if (!body) {
+    return;
+  }
+
+  try {
+    view.insert(
+      {
+        lessonId: question.lessonId,
+        parentId: question.id,
+        userId: session.getOrThrow("userId"),
+        userName: session.getOrThrow("userName"),
+        fromInstructor: true,
+        body,
+        createdAt: new Date(),
+      },
+      () => {
+        draft.body = "";
+        draft.open = false;
+        draft.error = "";
+      },
+    );
+  } catch (err: any) {
+    draft.error = err.message;
+  }
+}
+
+function onDelete(view: LiveView<Question>, item: Question) {
+  if (confirm("Delete this for everyone?")) {
+    view.delete(item);
+  }
+}
+
+function canDelete(item: Question, instructor: boolean): boolean {
+  return instructor || item.userId === session.get("userId");
+}
+
+/** One question with its replies. The instructor gets a reply box. */
+<QuestionThread (
+  question: Question,
+  replies: Question[],
+  view: LiveView<Question>,
+  instructor: boolean,
+  private draft: ReplyDraft = { open: false, body: "", error: "" },
+)>
+  <article class="thread thread-new">
+    <span class={["thread-avatar", question.fromInstructor && "is-instructor"]} aria-hidden="true">{initials(question.userName)}</span>
+
+    <div class="stack is-sm">
+      <div class="stack is-xs">
+        <div class="thread-head cluster">
+          <strong>{question.userName}</strong>
+          <span class="thread-time">{timeAgo(question.createdAt)}</span>
+          <span e:if={replies.some((r) => r.fromInstructor)} class="pill is-success">Answered</span>
+        </div>
+        <p class="thread-body">{question.body}</p>
+      </div>
+
+      <div e:if={replies.length > 0} class="thread-replies stack">
+        <div e:for={reply of replies} class="thread-reply thread-new">
+          <span class={["thread-avatar", reply.fromInstructor && "is-instructor"]} aria-hidden="true">{initials(reply.userName)}</span>
+          <div class="stack is-xs">
+            <div class="thread-head cluster">
+              <strong>{reply.userName}</strong>
+              <span e:if={reply.fromInstructor} class="pill is-accent">Instructor</span>
+              <span class="thread-time">{timeAgo(reply.createdAt)}</span>
+              <button e:if={canDelete(reply, instructor)} class="is-ghost is-sm" onclick={() => onDelete(view, reply)}>Delete</button>
+            </div>
+            <p class="thread-body">{reply.body}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="thread-actions cluster is-sm">
+        <button e:if={instructor && !draft.open} class="is-sm" onclick={() => draft.open = true}>Reply</button>
+        <button e:if={canDelete(question, instructor)} class="is-ghost is-sm" onclick={() => onDelete(view, question)}>Delete</button>
+      </div>
+
+      <form e:if={instructor && draft.open} class="thread-reply-form stack is-sm" onsubmit={() => onReplySubmit(view, question, draft)}>
+        <p e:if={draft.error} class="callout is-danger">{draft.error}</p>
+        <textarea value={draft.body} placeholder={`Reply to ${question.userName}`} aria-label="Reply" focus={true} required></textarea>
+        <div class="cluster is-sm">
+          <button type="submit" class="is-primary is-sm">Post reply</button>
+          <button type="button" class="is-ghost is-sm" onclick={() => draft.open = false}>Cancel</button>
+        </div>
+      </form>
+    </div>
+  </article>
+</QuestionThread>
