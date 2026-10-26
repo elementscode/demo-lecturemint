@@ -1,44 +1,12 @@
-![Lecturemint, an online watercolor course app built with Elements: a lesson page with the lesson video of a bouquet being painted, the lesson title and a Mark complete button, and a sidebar with the course's progress and lesson list.](https://elements.dev/demos/01a0f469-f275-7996-aabe-5ae0c9242bdc/poster?v=62ae0e272091)
+![Online courses with card checkout, built by Claude Code on Elements: a lesson page with the lesson video of a bouquet being painted, the lesson title and a Mark complete button, and a sidebar with the course's progress and lesson list.](https://elements.dev/demos/01a0f469-f275-7996-aabe-5ae0c9242bdc/poster?v=62ae0e272091)
 
-# Lecturemint
+# Online courses with card checkout, built by Claude Code on Elements
 
-> A demo app built with [Elements](https://elements.dev).
+> Lecturemint is a full-stack app built with Claude Code on Elements.
 
 Courses sold by card, lesson videos with notes and progress, live lesson questions, and revenue and completion stats.
 
-**Demo:** [Lecturemint](https://elements.dev/demos/01a0f469-f275-7996-aabe-5ae0c9242bdc)
-
-## Agent specs
-
-- **Agent:** Claude Code, Opus 5.5 Medium
-- **Time:** 29 min
-- **Cost:** $9.32 at API rates, September 2026
-
-## Get started
-
-```bash
-elements create lecturemint -scaffold=elementscode/demo-lecturemint
-```
-
-## Seed data and demo accounts
-
-The seed creates the instructor, Iris Calder, and three published courses with
-watercolor covers: Wet-on-Wet Skies (6 lessons, $49), Botanical Watercolor (7
-lessons, $79) and Loose Landscapes (8 lessons, $99). Every lesson has a short
-sample video of a painting coming together, and markdown notes. Four students
-own one to three courses each, with partial progress, and eight questions sit
-under lessons, some answered and two waiting for a reply.
-
-The sign-in page lists every account and fills the form when you click one.
-Students use the password `paintalong`; the instructor uses `watercolor`.
-
-| Email                   | Role                 |
-| ----------------------- | -------------------- |
-| iris@lecturemint.test   | instructor (Studio)  |
-| maya@lecturemint.test   | student, 2 courses   |
-| theo@lecturemint.test   | student, 1 course    |
-| priya@lecturemint.test  | student, 3 courses   |
-| sam@lecturemint.test    | student, 1 course    |
+[Run this app on your machine](https://elements.dev/demos/01a0f469-f275-7996-aabe-5ae0c9242bdc). Use this demo as inspiration, or as the starting point for your own app. Your agent creates a new app with this one as the scaffold, and you prompt it to add whatever features you want.
 
 ## Payments
 
@@ -55,8 +23,6 @@ key and registers its own Stripe webhook on the first checkout.
 
 Lecturemint needed course sales by card, video lessons with progress, a question thread under each lesson that the instructor answers live, and a studio for uploading lessons and reading the numbers. Each of those is a part of Elements, so the agent spent its 29 minutes on the course platform itself.
 
-### What Elements gave the app
-
 - **Live questions and replies.** Lesson questions are a LiveTable, so a question appears on the lesson page and in the instructor's inbox the moment it is posted, and the reply shows up under it just as fast. Only students who bought the course can ask, and only the instructor replies.
 
 - **Card payments.** Buying a course is one `@rpc` call that reads the price on the server and sends the student to Stripe. The course is granted once whether the return page or Stripe's webhook arrives first. Until a Stripe key is set, a test checkout inside the app takes the payment, and in production the app registers its own webhook.
@@ -69,16 +35,6 @@ Lecturemint needed course sales by card, video lessons with progress, a question
 
 - **Sessions and roles.** Every studio page and server call shares one guard on the instructor role.
 
-### What the project server gave the agent
+## Why Elements
 
-The project server runs alongside the agent and answers as soon as a file is saved: it type-checks the templates, TypeScript and SQL, applies migrations and reruns the tests, so every question came back right away and the agent kept building.
-
-### What shipped
-
-The app type-checks with zero errors and all 26 tests pass. Every page works on desktop and phone. A real sandbox payment went through Stripe end to end.
-
-**Demo:** [Lecturemint](https://elements.dev/demos/01a0f469-f275-7996-aabe-5ae0c9242bdc)
-
-## License
-
-MIT. See [LICENSE](LICENSE).
+Elements is an integrated full-stack app framework and a project server. The project server checks the agent's work as it builds: it type-checks the server and browser code, analyzes the program, applies migrations and runs the tests, then reports the results to the agent. A security mistake, such as calling a server-only function from the browser, is a compile error. The agent reads the report and fixes its own mistakes before it tells you a feature is done. The same checks run on every feature you ask for next.
